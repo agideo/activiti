@@ -1,0 +1,19 @@
+activiti-mysql:
+  hostname: activiti-mysql
+  container_name: activiti-mysql
+  image: sameersbn/mysql:latest
+  volumes:
+    - ./mysql/data:/var/lib/mysql
+  environment:
+    - DB_NAME=activiti_production
+    - DB_USER=activiti
+    - DB_PASS=aaa123aa
+
+activiti-server:
+  hostname: activiti-server
+  container_name: activiti-server
+  image: xjimmyshcn/activiti:latest
+  links:
+    - activiti-mysql:mysql
+  ports:
+    - 8888:8080

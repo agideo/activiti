@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="activiti-report">
+  <process id="task-duration-report" name="Task duration report" isExecutable="true">
+    <startEvent id="startevent1" name="Start">
+      <extensionElements>
+        <activiti:formProperty id="processDefinition" name="Select process definition" type="processDefinition" required="true"></activiti:formProperty>
+        <activiti:formProperty id="chartType" name="Chart type" type="enum" required="true">
+          <activiti:value id="pieChart" name="Pie chart"></activiti:value>
+          <activiti:value id="barChart" name="Bar chart"></activiti:value>
+        </activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="generateDataset"></sequenceFlow>
+    <scriptTask id="generateDataset" name="Execute script" scriptFormat="js" activiti:autoStoreVariables="false">
+      <script>
+               load("nashorn:mozilla_compat.js");
+               importPackage(java.sql);
+               importPackage(java.lang);
+               importPackage(org.activiti.explorer.reporting);
+               
+               var processDefinition = execution.getVariable("processDefinition");
+               
+               var result = ReportingUtil.executeSelectSqlQuery("select NAME_, avg(DURATION_) from ACT_HI_TASKINST where PROC_DEF_ID_ = '" + processDefinition.getId() + "' and END_TIME_ is not null group by NAME_");
+            
+               /* JDK 7
+               
+               var reportData = {};
+               reportData.datasets = [];
+               
+               var dataset = {};
+               dataset.type = String(execution.getVariable("chartType"));
+               dataset.description = "Average task duration (in seconds) for process definition '" + processDefinition.getName() + "' (version " + processDefinition.getVersion() + ")";
+               dataset.data = {};
+               
+               while (result.next()) { // process results one row at a time
+                 var name = result.getString(1);
+                 var val = result.getLong(2) / 1000;
+                 dataset.data[name] = val;
+               }
+               reportData.datasets.push(dataset);
+               
+               execution.setVariable("reportData", new java.lang.String(JSON.stringify(reportData)).getBytes("UTF-8"));
+               
+               */
+               
+               /* JDK 6+ */
+               
+               var reportData = new ReportData();
+               var dataset = reportData.newDataset();
+               dataset.type = execution.getVariable("chartType");
+               dataset.description = "Average task duration (in seconds) for process definition '" + processDefinition.getName() + "' (version " + processDefinition.getVersion() + ")";
+               
+               while (result.next()) { // process results one row at a time
+                 var name = result.getString(1);
+                 var val = result.getLong(2) / 1000;
+                 dataset.add(name, val);
+               }
+               
+                execution.setVariable("reportData", reportData.toBytes());
+               
+          </script>
+    </scriptTask>
+    <sequenceFlow id="flow3" sourceRef="generateDataset" targetRef="theEnd"></sequenceFlow>
+    <endEvent id="theEnd"></endEvent>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_task-duration-report">
+    <bpmndi:BPMNPlane bpmnElement="task-duration-report" id="BPMNPlane_task-duration-report">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="15.0" y="23.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="generateDataset" id="BPMNShape_generateDataset">
+        <omgdc:Bounds height="55.0" width="105.0" x="90.0" y="13.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="theEnd" id="BPMNShape_theEnd">
+        <omgdc:Bounds height="35.0" width="35.0" x="240.0" y="23.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="50.0" y="40.0"></omgdi:waypoint>
+        <omgdi:waypoint x="90.0" y="40.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="195.0" y="40.0"></omgdi:waypoint>
+        <omgdi:waypoint x="240.0" y="40.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

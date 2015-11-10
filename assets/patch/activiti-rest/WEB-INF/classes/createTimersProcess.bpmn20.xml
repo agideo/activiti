@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="Examples">
+  <process id="createTimersProcess" name="Create timers process" isExecutable="true">
+    <documentation>Test process to create a number of timers.</documentation>
+    <startEvent id="theStart">
+      <extensionElements>
+        <activiti:formProperty id="throwException" name="Throw exception when executing timer" type="enum" required="true">
+          <activiti:value id="true" name="Yes, please"></activiti:value>
+          <activiti:value id="false" name="No thanks"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="duration" name="Timer duration" type="enum" required="true">
+          <activiti:value id="long" name="One hour"></activiti:value>
+          <activiti:value id="short" name="10 seconds"></activiti:value>
+        </activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <sequenceFlow id="flow1" sourceRef="theStart" targetRef="exclusiveGw"></sequenceFlow>
+    <exclusiveGateway id="exclusiveGw" name="Exclusive Timer duration gateway"></exclusiveGateway>
+    <sequenceFlow id="flow2" sourceRef="exclusiveGw" targetRef="longTimerTask">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${duration == 'long'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow3" sourceRef="exclusiveGw" targetRef="shortTimerTask">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${duration == 'short'}]]></conditionExpression>
+    </sequenceFlow>
+    <userTask id="longTimerTask" name="Task with timer on it">
+      <documentation>This task has a timer on it</documentation>
+    </userTask>
+    <boundaryEvent id="longTimer" attachedToRef="longTimerTask" cancelActivity="true">
+      <timerEventDefinition>
+        <timeDuration>PT1H</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <sequenceFlow id="flow4" sourceRef="longTimerTask" targetRef="theEnd"></sequenceFlow>
+    <sequenceFlow id="flow5" sourceRef="longTimer" targetRef="longTimerExpire"></sequenceFlow>
+    <scriptTask id="longTimerExpire" name="Execute script" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script>
+        if(throwException == 'true') {
+          throw new java.lang.RuntimeException('Activiti Engine Rocks!');
+        }
+      </script>
+    </scriptTask>
+    <sequenceFlow id="flow6" sourceRef="longTimerExpire" targetRef="theEnd"></sequenceFlow>
+    <userTask id="shortTimerTask" name="my task"></userTask>
+    <boundaryEvent id="shortTimer" attachedToRef="shortTimerTask" cancelActivity="true">
+      <timerEventDefinition>
+        <timeDuration>PT10S</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <sequenceFlow id="flow7" sourceRef="shortTimerTask" targetRef="theEnd"></sequenceFlow>
+    <sequenceFlow id="flow8" sourceRef="shortTimer" targetRef="shortTimerExpire"></sequenceFlow>
+    <scriptTask id="shortTimerExpire" name="Execute script" scriptFormat="js" activiti:autoStoreVariables="false">
+      <script>
+        if(throwException == 'true') {
+          throw new java.lang.RuntimeException('Activiti Engine Rocks!');
+        }
+      </script>
+    </scriptTask>
+    <sequenceFlow id="flow9" sourceRef="shortTimerExpire" targetRef="theEnd"></sequenceFlow>
+    <endEvent id="theEnd"></endEvent>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_createTimersProcess">
+    <bpmndi:BPMNPlane bpmnElement="createTimersProcess" id="BPMNPlane_createTimersProcess">
+      <bpmndi:BPMNShape bpmnElement="theStart" id="BPMNShape_theStart">
+        <omgdc:Bounds height="35.0" width="35.0" x="1.0" y="123.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusiveGw" id="BPMNShape_exclusiveGw">
+        <omgdc:Bounds height="40.0" width="40.0" x="80.0" y="120.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="longTimerTask" id="BPMNShape_longTimerTask">
+        <omgdc:Bounds height="60.0" width="100.0" x="170.0" y="160.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="longTimer" id="BPMNShape_longTimer">
+        <omgdc:Bounds height="30.0" width="30.0" x="256.0" y="176.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="longTimerExpire" id="BPMNShape_longTimerExpire">
+        <omgdc:Bounds height="60.0" width="100.0" x="329.0" y="160.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="shortTimerTask" id="BPMNShape_shortTimerTask">
+        <omgdc:Bounds height="60.0" width="100.0" x="170.0" y="47.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="shortTimer" id="BPMNShape_shortTimer">
+        <omgdc:Bounds height="30.0" width="30.0" x="256.0" y="63.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="shortTimerExpire" id="BPMNShape_shortTimerExpire">
+        <omgdc:Bounds height="60.0" width="100.0" x="329.0" y="48.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="theEnd" id="BPMNShape_theEnd">
+        <omgdc:Bounds height="35.0" width="35.0" x="510.0" y="113.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="36.0" y="140.0"></omgdi:waypoint>
+        <omgdi:waypoint x="80.0" y="140.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="100.0" y="160.0"></omgdi:waypoint>
+        <omgdi:waypoint x="100.0" y="190.0"></omgdi:waypoint>
+        <omgdi:waypoint x="132.0" y="190.0"></omgdi:waypoint>
+        <omgdi:waypoint x="170.0" y="190.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="100.0" y="120.0"></omgdi:waypoint>
+        <omgdi:waypoint x="100.0" y="76.0"></omgdi:waypoint>
+        <omgdi:waypoint x="170.0" y="77.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="220.0" y="220.0"></omgdi:waypoint>
+        <omgdi:waypoint x="220.0" y="236.0"></omgdi:waypoint>
+        <omgdi:waypoint x="527.0" y="236.0"></omgdi:waypoint>
+        <omgdi:waypoint x="527.0" y="148.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+        <omgdi:waypoint x="286.0" y="191.0"></omgdi:waypoint>
+        <omgdi:waypoint x="329.0" y="190.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="429.0" y="190.0"></omgdi:waypoint>
+        <omgdi:waypoint x="472.0" y="177.0"></omgdi:waypoint>
+        <omgdi:waypoint x="527.0" y="148.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+        <omgdi:waypoint x="220.0" y="47.0"></omgdi:waypoint>
+        <omgdi:waypoint x="220.0" y="30.0"></omgdi:waypoint>
+        <omgdi:waypoint x="527.0" y="30.0"></omgdi:waypoint>
+        <omgdi:waypoint x="527.0" y="113.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+        <omgdi:waypoint x="286.0" y="78.0"></omgdi:waypoint>
+        <omgdi:waypoint x="329.0" y="78.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
+        <omgdi:waypoint x="429.0" y="78.0"></omgdi:waypoint>
+        <omgdi:waypoint x="464.0" y="78.0"></omgdi:waypoint>
+        <omgdi:waypoint x="527.0" y="113.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

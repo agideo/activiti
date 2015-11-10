@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="activiti-report">
+  <process id="helpdesk-firstline-vs-escalated-report" name="Helpdesk process: firstline vs escalated" isExecutable="true">
+    <startEvent id="startevent1" name="Start"></startEvent>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="generateDataset"></sequenceFlow>
+    <scriptTask id="generateDataset" name="Execute script" scriptFormat="js" activiti:autoStoreVariables="false">
+      <script>
+               load("nashorn:mozilla_compat.js");
+               importPackage(java.sql);
+               importPackage(java.lang);
+               importPackage(org.activiti.explorer.reporting);
+               
+               var escalatedResult = ReportingUtil.executeSelectSqlQuery("SELECT count(*) FROM ACT_HI_ACTINST where END_TIME_ is not null and ACT_ID_ = 'handleEscalation' and PROC_DEF_ID_ like 'escalationExample%'");
+               escalatedResult.next();
+               var escalatedCount = escalatedResult.getLong(1);
+               
+               var firstLineResult = ReportingUtil.executeSelectSqlQuery("SELECT count(*) FROM ACT_HI_PROCINST where END_TIME_ is not null and PROC_DEF_ID_ like 'escalationExample%'");
+               firstLineResult.next();
+               var firstLineCount = firstLineResult.getLong(1) - escalatedCount;
+               
+               /* JDK 7 only 
+               var reportData = {};
+               
+               var dataset = {};
+               dataset.description = "Helpdesk process: issues solved in first line vs escalation needed";
+               dataset.type = "pieChart";
+               reportData.datasets = [];
+               
+               
+               if (escalatedCount &gt; 0 || firstLineCount &gt; 0) {
+                   dataset.data = {"First line solved" : firstLineCount, "Escalation needed" : escalatedCount};
+               } 
+
+               reportData.datasets.push(dataset);
+               
+               execution.setVariable("reportData", new java.lang.String(JSON.stringify(reportData)).getBytes("UTF-8"));
+               */
+               
+               /* JDK 6+ */
+               
+               var reportData = new ReportData();
+               var dataset = reportData.newDataset();
+               dataset.description = "Helpdesk process: issues solved in first line vs escalation needed";
+               dataset.type = "pieChart";
+               
+               if (escalatedCount &gt; 0 || firstLineCount &gt; 0) {
+                 dataset.add("First line solved", firstLineCount);
+                 dataset.add("Escalation needed", escalatedCount);
+               } 
+               
+               execution.setVariable("reportData", reportData.toBytes());
+               
+          </script>
+    </scriptTask>
+    <sequenceFlow id="flow3" sourceRef="generateDataset" targetRef="theEnd"></sequenceFlow>
+    <endEvent id="theEnd"></endEvent>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_helpdesk-firstline-vs-escalated-report">
+    <bpmndi:BPMNPlane bpmnElement="helpdesk-firstline-vs-escalated-report" id="BPMNPlane_helpdesk-firstline-vs-escalated-report">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="40.0" y="15.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="generateDataset" id="BPMNShape_generateDataset">
+        <omgdc:Bounds height="60.0" width="100.0" x="100.0" y="3.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="theEnd" id="BPMNShape_theEnd">
+        <omgdc:Bounds height="35.0" width="35.0" x="240.0" y="15.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="75.0" y="32.0"></omgdi:waypoint>
+        <omgdi:waypoint x="100.0" y="33.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="200.0" y="33.0"></omgdi:waypoint>
+        <omgdi:waypoint x="240.0" y="32.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
