@@ -1,7 +1,7 @@
 all: build
 
 build:
-	@docker build --rm=false --tag=${USER}/activiti .
+	@docker build -t agideo/activiti .
 
 test:
 	build
@@ -28,7 +28,7 @@ prod:
         --link activiti-mysql:mysql \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v $$(which docker):/bin/docker \
-	${USER}/activiti
+	agideo/activiti
 
 logs:
 	@docker logs -f activiti
